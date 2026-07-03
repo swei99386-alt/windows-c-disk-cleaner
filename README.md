@@ -1,3 +1,5 @@
+[English](./README_EN.md) | 简体中文
+
 # Windows C盘清理助手
 
 > 通过和 AI 对话，帮你智能清理 Windows 电脑的 C 盘和整个硬盘——包括那些普通清理软件扫不到的 AI 工具缓存、开发者缓存、以及隐私敏感区域。
@@ -32,26 +34,20 @@
 
 ## 快速开始
 
-### 1. 安装到你的 AI 助手
-
-把这个仓库克隆到你的 AI 助手技能目录：
-
+### 1. 克隆本仓库到本地
 ```powershell
-# Claude Code
-git clone https://github.com/swei99386-alt/windows-c-disk-cleaner "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner"
-
-# Codex
-git clone https://github.com/swei99386-alt/windows-c-disk-cleaner "$env:USERPROFILE\.codex\skills\windows-c-disk-cleaner"
+git clone https://github.com/swei99386-alt/windows-c-disk-cleaner.git
+cd windows-c-disk-cleaner
 ```
 
-### 2. 配置你的用户名
-
-打开 `config/auto-clean-policy.json`，把所有 `YOURUSERNAME` 替换成你 Windows 的实际用户名：
-
+### 2. 运行一键安装配置脚本（推荐）
+在项目根目录下直接运行以下命令，脚本会自动获取您的当前用户名并进行替换，且会自动软链接（安装）到您的 AI 助手技能目录下：
 ```powershell
-# 查看你的用户名
-$env:USERNAME
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
+*注：该脚本会自动检测并安装到 **Claude Code、Codex 和 Antigravity**。如果因为权限限制无法创建软链接，脚本会自动为您复制文件。*
+
+*(您也可以选择手动配置：打开 `config/auto-clean-policy.json`，把所有 `YOURUSERNAME` 手动替换成您的 Windows 用户名，然后将整个文件夹复制到您的 AI 助手的技能目录下。)*
 
 ### 3. 开始对话
 
