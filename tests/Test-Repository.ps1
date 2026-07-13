@@ -41,6 +41,15 @@ try {
     $treeScript = Get-Content (Join-Path $root 'scripts/run_from_treesize.ps1') -Raw
     if ($confirmedScript -notmatch 'browser-running-scan-skipped' -or $confirmedScript -notmatch "@\('deleted', 'cleared'\)") { $failed += 'Confirmed cleanup safety contract missing' }
     if ($treeScript -notmatch 'system_drive_before_free_gb' -or $treeScript -notmatch 'system_drive_after_free_gb') { $failed += 'Safe-clean evidence fields missing' }
+    $fixtureRoot = Join-Path $temp 'fixture-cache'
+    New-Item -ItemType Directory -Path $fixtureRoot -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $fixtureRoot 'payload.txt') -Value ('x' * 4096) -NoNewline
+    $fixturePolicy = Join-Path $temp 'fixture-policy.json'
+    [pscustomobject]@{ browser_cache_dir_names=@(); never_touch_roots=@(); auto_clear_paths=@($fixtureRoot); cache_scan_roots=@() } | ConvertTo-Json | Set-Content -LiteralPath $fixturePolicy -Encoding UTF8
+    $fixtureResult = & pwsh -NoProfile -File (Join-Path $root 'scripts/cleanup_low_risk.ps1') -Execute -ConfirmCleanup -PolicyOnly -PolicyPath $fixturePolicy -EmitJson | ConvertFrom-Json
+    if ((Test-Path $fixtureRoot) -or $fixtureResult.status -ne 'deleted' -or $null -eq $fixtureResult.freed_gb -or $fixtureResult.freed_gb -lt 0) { $failed += 'Isolated cleanup behavior failed' }
+    $confirmedReport = & pwsh -NoProfile -File (Join-Path $root 'scripts/cleanup_confirmed_safe.ps1') -Execute -ConfirmCleanup -EmitJson | ConvertFrom-Json
+    if ($null -eq $confirmedReport.before_drives -or $null -eq $confirmedReport.after_drives -or $null -eq $confirmedReport.drive_delta) { $failed += 'Confirmed cleanup evidence behavior failed' }
 } finally { $env:USERPROFILE = $old; if (Test-Path $temp) { Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue } }
 if ($failed.Count) { $failed | ForEach-Object { Write-Error $_ }; exit 1 }
 Write-Output 'PASS: repository validation'

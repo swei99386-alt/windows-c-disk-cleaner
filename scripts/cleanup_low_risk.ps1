@@ -5,6 +5,7 @@ param(
     [switch]$IncludeBrowserCaches,
     [switch]$IncludeConfirmedCaches,
     [switch]$StopBrowserProcesses,
+    [switch]$PolicyOnly,
     [string]$PolicyPath,
     [switch]$EmitJson
 )
@@ -134,11 +135,14 @@ $browserDirectoryNames = @($policy.browser_cache_dir_names)
 $neverTouchRoots = @($policy.never_touch_roots)
 $browserRunning = [bool](Get-Process chrome, msedge -ErrorAction SilentlyContinue)
 
-$targets = @(
-    [pscustomobject]@{ name = 'npm-cache'; path = (Join-Path $userProfile 'AppData\Local\npm-cache'); type = 'directory'; requires_browser_stop = $false; skip_size_when_running = $false; allow_under_never_touch = $false },
-    [pscustomobject]@{ name = 'bun-cache'; path = (Join-Path $userProfile '.bun\install\cache'); type = 'directory'; requires_browser_stop = $false; skip_size_when_running = $false; allow_under_never_touch = $false },
-    [pscustomobject]@{ name = 'gemini-browser-recordings'; path = (Join-Path $userProfile '.gemini\antigravity\browser_recordings'); type = 'directory'; requires_browser_stop = $false; skip_size_when_running = $false; allow_under_never_touch = $false }
-)
+$targets = @()
+if (-not $PolicyOnly) {
+    $targets += @(
+        [pscustomobject]@{ name = 'npm-cache'; path = (Join-Path $userProfile 'AppData\Local\npm-cache'); type = 'directory'; requires_browser_stop = $false; skip_size_when_running = $false; allow_under_never_touch = $false },
+        [pscustomobject]@{ name = 'bun-cache'; path = (Join-Path $userProfile '.bun\install\cache'); type = 'directory'; requires_browser_stop = $false; skip_size_when_running = $false; allow_under_never_touch = $false },
+        [pscustomobject]@{ name = 'gemini-browser-recordings'; path = (Join-Path $userProfile '.gemini\antigravity\browser_recordings'); type = 'directory'; requires_browser_stop = $false; skip_size_when_running = $false; allow_under_never_touch = $false }
+    )
+}
 
 foreach ($path in @($policy.auto_clear_paths)) {
     if ([string]::IsNullOrWhiteSpace([string]$path)) { continue }
