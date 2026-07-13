@@ -6,7 +6,7 @@ An AI-assisted Windows disk auditing and conservative cleanup skill. It reports 
 
 ## Safety warning
 
-Review the report before acting. The tool does not automatically delete personal documents, Downloads, Desktop files, WSL data, Docker virtual disks, or system directories. User-confirmed deletion may not be recoverable.
+Review the report before acting. The tool does not automatically delete personal documents, Downloads, Desktop files, WSL data, Docker virtual disks, or system directories. Cleanup requires an explicit `-Execute` switch. Migration and directory links are always separate manual tasks, not automated Skill behavior.
 
 ## Core capabilities
 
@@ -61,7 +61,7 @@ The public documentation uses five categories: safe to clean, clean after user c
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\run_disk_governor.ps1 -Mode report-only -EmitJson
 powershell -ExecutionPolicy Bypass -File .\scripts\find_duplicate_downloads.ps1 -EmitJson
-powershell -ExecutionPolicy Bypass -File .\scripts\cleanup_low_risk.ps1 -Execute
+pwsh -NoProfile -File .\scripts\run_disk_governor.ps1 -Mode safe-clean -Execute
 ```
 
 ## Verification status
@@ -74,7 +74,7 @@ This project is currently verified with PowerShell 7; Windows PowerShell 5.1 is 
 
 ## Current limitations
 
-No real cleanup was run, so no space reclaimed is claimed; real screenshots are pending manual addition. Docker and WSL are discovery/report-only and cannot be auto-deleted.
+No real cleanup was run, so no space reclaimed is claimed; real screenshots are pending manual addition. Docker, WSL, and application migration are discovery/report-only and cannot be auto-deleted or auto-migrated. Browser profile trees are not scanned while the browser is running.
 
 ## File structure
 

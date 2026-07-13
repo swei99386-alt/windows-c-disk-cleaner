@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$Execute,
+    [switch]$ConfirmCleanup,
     [switch]$IncludeConfirmedCaches,
     [switch]$IncludeBrowserCaches,
     [string[]]$ProjectWorkPath,
@@ -15,6 +16,9 @@ $skillRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path
 
 if (-not $PolicyPath) {
     $PolicyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
+}
+if ($Execute -and -not $ConfirmCleanup) {
+    throw 'Cleanup requires both -Execute and -ConfirmCleanup after explicit user confirmation.'
 }
 
 function Convert-ToGB {
@@ -172,9 +176,13 @@ function Get-BrowserCacheTargets {
     $targets = @()
     if (-not (Test-Path -LiteralPath $Root)) { return $targets }
 
-    $dirs = Get-ChildItem -LiteralPath $Root -Force -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -in $names }
-    foreach ($dir in $dirs) {
-        if ($targets -notcontains $dir.FullName) { $targets += $dir.FullName }
+    $roots = @($Root)
+    $roots += @(Get-ChildItem -LiteralPath $Root -Force -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^(Default|Profile|Guest Profile|System Profile)' } | Select-Object -ExpandProperty FullName)
+    foreach ($candidateRoot in $roots) {
+        foreach ($name in $names) {
+            $candidate = Join-Path $candidateRoot $name
+            if ((Test-Path -LiteralPath $candidate) -and ($targets -notcontains $candidate)) { $targets += $candidate }
+        }
     }
 
     foreach ($extra in @('OptGuideOnDeviceModel', 'optimization_guide_model_store')) {
@@ -212,7 +220,12 @@ if ($IncludeBrowserCaches) {
         (Join-Path $userProfile 'AppData\Local\Google\Chrome\User Data'),
         (Join-Path $userProfile 'AppData\Local\Microsoft\Edge\User Data')
     )
+    $browserRunning = [bool](Get-Process chrome, msedge -ErrorAction SilentlyContinue)
     foreach ($root in $browserRoots) {
+        if ($browserRunning) {
+            Add-Result -Name 'browser-cache-root' -Path $root -Status 'skipped-in-use' -BeforeBytes $null -AfterBytes $null -Reason 'browser-running-scan-skipped'
+            continue
+        }
         foreach ($target in (Get-BrowserCacheTargets -Root $root)) {
             Clear-DirectoryContentsSafe -Name 'browser-pure-cache' -Path $target
         }
@@ -239,9 +252,9 @@ $report = [pscustomobject]@{
     before_drives      = $beforeDrives
     after_drives       = $afterDrives
     drive_delta        = @($driveDelta)
-    cleaned            = @($results | Where-Object { $_.status -in @('deleted', 'cleared', 'partial') -and $_.freed_gb -gt 0 })
+    cleaned            = @($results | Where-Object { $_.status -in @('deleted', 'cleared') -and $_.freed_gb -gt 0 })
     skipped_in_use     = @($results | Where-Object { $_.status -in @('skipped-in-use', 'partial') -and $_.reason })
-    failed             = @($results | Where-Object { $_.status -eq 'failed' })
+    failed             = @($results | Where-Object { $_.status -in @('failed', 'partial') })
     missing            = @($results | Where-Object { $_.status -eq 'missing' })
     all_results        = @($results)
 }

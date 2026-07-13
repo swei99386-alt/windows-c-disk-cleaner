@@ -3,6 +3,7 @@ param(
     [string]$ReportPath,
     [string]$PolicyPath,
     [switch]$Execute,
+    [switch]$ConfirmCleanup,
     [switch]$EmitJson
 )
 
@@ -14,6 +15,9 @@ $skillRoot = Split-Path -Parent $scriptRoot
 
 if (-not $PolicyPath) {
     $PolicyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
+}
+if ($Execute -and -not $ConfirmCleanup) {
+    throw 'Cleanup requires both -Execute and -ConfirmCleanup after explicit user confirmation.'
 }
 
 $policy = Import-DiskPolicy -Path $PolicyPath
@@ -27,6 +31,9 @@ if ($ReportPath) {
 }
 
 $audit = powershell -ExecutionPolicy Bypass -File $auditScript -EmitJson | ConvertFrom-Json
+$systemDriveName = ($env:SystemDrive -replace '[:\\]', '')
+$beforeSystemDrive = Get-PSDrive -Name $systemDriveName -ErrorAction Stop
+$beforeSystemFreeGB = [math]::Round(([double]$beforeSystemDrive.Free / 1GB), 2)
 
 $cleanupArgs = @(
     '-ExecutionPolicy', 'Bypass',
@@ -37,13 +44,15 @@ $cleanupArgs = @(
 )
 
 if ($Execute) {
-    $cleanupArgs += '-Execute'
+    $cleanupArgs += @('-Execute', '-ConfirmCleanup')
     if ($policy.allow_process_stop) {
         $cleanupArgs += '-StopBrowserProcesses'
     }
 }
 
 $cleanup = powershell @cleanupArgs | ConvertFrom-Json
+$afterSystemDrive = Get-PSDrive -Name $systemDriveName -ErrorAction Stop
+$afterSystemFreeGB = [math]::Round(([double]$afterSystemDrive.Free / 1GB), 2)
 
 $suggestOnly = @($audit.candidates | Where-Object { $_.action_class -eq 'suggest_only' })
 $confirmThenClear = @($audit.candidates | Where-Object { $_.action_class -eq 'confirm_then_clear' })
@@ -100,6 +109,9 @@ $result = [pscustomobject]@{
     report_path = $ReportPath
     tree_size_summary = $treeSummary
     drive_summary = $audit.drive_summary
+    system_drive_before_free_gb = $beforeSystemFreeGB
+    system_drive_after_free_gb = $afterSystemFreeGB
+    system_drive_delta_gb = [math]::Round(($afterSystemFreeGB - $beforeSystemFreeGB), 2)
     cleaned = @($cleanup | Where-Object { $_.status -in @('deleted', 'cleared') })
     skipped_in_use = @($cleanup | Where-Object { $_.status -eq 'skipped-in-use' })
     failed = @($cleanup | Where-Object { $_.status -eq 'failed' })

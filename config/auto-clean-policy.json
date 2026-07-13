@@ -1,5 +1,7 @@
 {
   "allow_process_stop": false,
+  "require_execute_switch": true,
+  "migration_policy": "manual_only",
   "human_report_language": "zh-CN",
   "min_report_size_gb": 1.0,
   "full_audit_drives": [
@@ -75,8 +77,9 @@
   "watch_for_two_weeks": [],
   "protected_user_data_hints": [
     "WeChat and messaging app chat data",
-    "AI assistant app state (Claude, Codex, etc.)",
+    "AI assistant app state (Claude, Codex, Gemini/Antigravity, etc.)",
     "Personal documents, photos, and project files",
-    "SSH keys and Docker/WSL configuration"
+    "SSH keys and Docker/WSL configuration",
+    "App-managed data and virtual disks must not be moved or deleted automatically"
   ]
 }

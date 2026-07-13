@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$Execute,
+    [switch]$ConfirmCleanup,
     [switch]$IncludeBrowserCaches,
     [switch]$IncludeConfirmedCaches,
     [switch]$StopBrowserProcesses,
@@ -15,6 +16,9 @@ $skillRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path
 
 if (-not $PolicyPath) {
     $PolicyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
+}
+if ($Execute -and -not $ConfirmCleanup) {
+    throw 'Cleanup requires both -Execute and -ConfirmCleanup after explicit user confirmation.'
 }
 
 function Convert-ToGB {
@@ -110,13 +114,16 @@ function Get-BrowserCacheTargets {
 
     if (-not (Test-Path -LiteralPath $BasePath)) { return @() }
 
-    try {
-        Get-ChildItem -LiteralPath $BasePath -Force -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
-            $_.Name -in $DirectoryNames
-        } | Select-Object -ExpandProperty FullName
-    } catch {
-        @()
+    $roots = @($BasePath)
+    $roots += @(Get-ChildItem -LiteralPath $BasePath -Force -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^(Default|Profile|Guest Profile|System Profile)' } | Select-Object -ExpandProperty FullName)
+    $targets = @()
+    foreach ($root in $roots) {
+        foreach ($name in $DirectoryNames) {
+            $candidate = Join-Path $root $name
+            if (Test-Path -LiteralPath $candidate) { $targets += $candidate }
+        }
     }
+    return @($targets | Sort-Object -Unique)
 }
 
 $policy = Load-Policy -Path $PolicyPath
@@ -160,7 +167,7 @@ if ($IncludeBrowserCaches) {
         $rootPath = [string]$root
         if ([string]::IsNullOrWhiteSpace($rootPath)) { continue }
         $requiresBrowserStop = $rootPath -like '*\Google\Chrome\User Data' -or $rootPath -like '*\Microsoft\Edge\User Data'
-        if ($requiresBrowserStop -and $browserRunning -and $Execute -and -not $StopBrowserProcesses) {
+        if ($requiresBrowserStop -and $browserRunning) {
             $targets += [pscustomobject]@{ name = 'browser-cache-root'; path = $rootPath; type = 'directory'; requires_browser_stop = $true; skip_size_when_running = $true; allow_under_never_touch = $false }
             continue
         }

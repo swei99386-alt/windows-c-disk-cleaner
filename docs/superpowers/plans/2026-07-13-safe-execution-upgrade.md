@@ -26,14 +26,14 @@
 
 **Interfaces:**
 
-- Produces: `-Execute` switch on `run_disk_governor.ps1`.
-- Behavior: `safe-clean`, `confirmed-clean`, and `project-work-clean` throw unless `-Execute` is supplied.
+- Produces: `-Execute` switch on `run_disk_governor.ps1` and `-ConfirmCleanup` on direct cleanup scripts.
+- Behavior: `safe-clean`, `confirmed-clean`, and `project-work-clean` throw unless `-Execute` is supplied; direct cleanup scripts throw unless both switches are supplied.
 
 - [ ] Add `[switch]$Execute` to the runner parameters.
 - [ ] Define `$executionModes = @('safe-clean', 'confirmed-clean', 'project-work-clean')`.
 - [ ] Before dispatching a mode, throw `Execution mode '<mode>' requires -Execute after explicit user confirmation.` when `$Mode` is an execution mode and `$Execute` is false.
 - [ ] Preserve `report-only`, `audit-only`, and closing-report behavior.
-- [ ] Test the blocked command in a temporary profile and assert a non-zero exit code without creating files.
+- [ ] Test the blocked unified and direct commands in a temporary profile and assert a non-zero exit code without creating files.
 
 ### Task 2: Bound browser-cache scans and evidence reporting
 
@@ -41,16 +41,17 @@
 
 - Modify: `scripts/cleanup_low_risk.ps1`
 - Modify: `scripts/run_from_treesize.ps1`
+- Modify: `scripts/cleanup_confirmed_safe.ps1`
 - Test: `tests/Test-Repository.ps1`
 
 **Interfaces:**
 
 - Consumes: the existing `browser_cache_dir_names` policy array.
-- Produces: an explicit `browser-running-scan-skipped` result before any browser-profile recursion.
+- Produces: an explicit `browser-running-scan-skipped` result before any browser-profile scan and before/after free-space fields for safe-clean.
 
 - [ ] Return one skipped browser-root result when Chrome or Edge is running, regardless of execution mode.
-- [ ] Do not call `Get-BrowserCacheTargets` for a running browser.
-- [ ] Keep `deleted`, `cleared`, `failed`, `missing`, and `skipped-in-use` separate in JSON output.
+- [ ] Do not call `Get-BrowserCacheTargets` for a running browser; when closed, inspect only the browser root and direct profile folders.
+- [ ] Keep `deleted`, `cleared`, `partial`, `failed`, `missing`, and `skipped-in-use` separate in JSON output; never count `partial` as reclaimed.
 - [ ] Add repository checks that execution tests cannot invoke `-Execute`, `safe-clean`, `confirmed-clean`, or `project-work-clean`.
 
 ### Task 3: Update public safety contract

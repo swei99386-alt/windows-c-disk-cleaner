@@ -17,17 +17,17 @@ The public repository is the source of truth. Changes are tested and pushed on `
 
 ### 2. Execution gate
 
-`report-only`, `audit-only`, and closing reports remain non-mutating. `safe-clean`, `confirmed-clean`, and `project-work-clean` require the new `-Execute` switch at the top-level runner. Calling an execution mode without it exits with a clear message and makes no changes.
+`report-only`, `audit-only`, and closing reports remain non-mutating. `safe-clean`, `confirmed-clean`, and `project-work-clean` require `-Execute` at the top-level runner. Every direct cleanup script also requires both `-Execute` and `-ConfirmCleanup`. Calling any execution path without its required switches exits with a clear message and makes no changes.
 
 Migration is not an execution mode. The Skill may only report that migration is a separate, manually approved task. It must never create a junction, run `Move-Item`, or invoke Robocopy as part of disk cleaning.
 
 ### 3. Bounded scans
 
-Browser cache discovery is skipped whenever Chrome or Edge is running, in both planning and execution. The default workflow does not recursively scan a browser profile. The documentation instructs agents to scan targeted paths first and stop a path-level scan when it exceeds the supplied time budget.
+Browser cache discovery is skipped whenever Chrome or Edge is running, in both planning and execution. When browsers are closed, discovery uses only the browser root and its direct profile folders; it never recursively scans the entire profile tree.
 
 ### 4. Evidence-backed cleanup report
 
-Every cleanup result includes: before/after free space for the system drive, path, status, before/after size when available, and a reason. A result is counted as reclaimed only when its status is `deleted` or `cleared` and the recorded size difference is positive. `failed`, `missing`, and `skipped-in-use` are never presented as successful cleanup.
+Every cleanup result includes: before/after free space for the system drive, path, status, before/after size when available, and a reason. A result is counted as reclaimed only when its status is `deleted` or `cleared` and the recorded size difference is positive. `partial`, `failed`, `missing`, and `skipped-in-use` are never presented as successful cleanup.
 
 ### 5. Protected data
 

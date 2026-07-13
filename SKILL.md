@@ -1,6 +1,6 @@
 ---
 name: windows-c-disk-cleaner
-description: "Use when the user wants Windows disk governance on this machine: audit C:/E:/F: usage, interpret TreeSize results, rank cleanup/move/keep candidates, maintain closing records, and optionally clear only low-risk caches such as npm, bun, browser cache, crash logs, component caches, or recording artifacts. Also use when the user wants a TreeSize-driven auto-cache-clean pass that only touches a strict low-risk whitelist and reports skipped items instead of forcing deletion."
+description: "Use when the user wants a conservative Windows disk audit: discover fixed disks, interpret TreeSize results, rank cleanup/move/keep candidates, maintain evidence-backed reports, and only clean strict low-risk caches after explicit confirmation."
 ---
 
 # Windows C Disk Cleaner
@@ -28,6 +28,8 @@ Trigger this skill when the user asks any of the following:
 - Prefer moving large user or tool data to a secondary drive before deleting.
 - Focus on items larger than `1 GB` unless the user asks for smaller detail.
 - Default flow is: audit -> plan -> execute only if the user asks.
+- An execution request requires explicit user confirmation and the `-Execute` switch; never infer it from an earlier plan or an automatic approval.
+- Migration, junction creation, Robocopy, and app-data moves are separate manual tasks and are never part of this Skill's cleanup flow.
 - Low-risk execution is allowed only for explicit cache targets.
 - Auto-cache-clean mode is conservative by default: do not migrate user data, do not uninstall software, do not stop processes unless the user explicitly asks.
 - Cross-agent mode must rely only on local PowerShell scripts, JSON policy, and plain files so Codex and Claude Code can both reuse it.
@@ -128,7 +130,7 @@ Always sort findings into these layers:
 
 - `auto_clear`
   - strict low-risk cache whitelist
-  - can be cleared automatically when the user asks to clean
+  - can be cleared only after explicit confirmation in the current thread and `-Execute`
 - `confirm_then_clear`
   - low-risk or medium-low-risk cleanup targets that are not strict whitelist items
   - only clear after the user explicitly confirms in the current thread
@@ -182,7 +184,7 @@ Do not auto-delete:
 - `uv\cache`
 - AI tool runtime caches
 
-Confirmed-clean targets are a separate layer. If the user says "能删的先删", or if a scheduled automation is explicitly configured to clean low-risk items, the agent may clear `confirm_then_clear` items and must report each item as deleted, missing, skipped, or failed. Do not silently treat medium-risk or user-data items as low-risk.
+Confirmed-clean targets are a separate layer. Even if the user says "能删的先删", the agent must repeat the exact paths and wait for an explicit current-thread confirmation before invoking `-Execute`. Scheduled automation is report-only and must never auto-clean. Do not silently treat medium-risk or user-data items as low-risk.
 
 Every execution run must:
 
@@ -191,7 +193,7 @@ Every execution run must:
 3. Record C: free space after cleanup.
 4. End with four lines: `已删`, `没删`, `还能删`, `为什么跳过`.
 
-If Chrome or Edge is running and the user did not allow closing browsers, do not recursively scan browser cache trees. Report the browser cache roots as skipped because the browser is running.
+If Chrome or Edge is running, do not scan or clear browser profile trees. Report the browser cache roots as skipped; do not close the browser as part of this Skill.
 
 ## Large path forensics
 
@@ -307,13 +309,13 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\window
 - Execute low-risk cleanup, including browser cache, and stop browsers if needed:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\cleanup_low_risk.ps1" -Execute -IncludeBrowserCaches -StopBrowserProcesses
+pwsh -NoProfile -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\run_disk_governor.ps1" -Mode safe-clean -Execute
 ```
 
 - Execute strict low-risk cleanup plus user-confirmed extra cleanup without stopping browsers:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\cleanup_low_risk.ps1" -Execute -IncludeConfirmedCaches -IncludeBrowserCaches
+pwsh -NoProfile -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\run_disk_governor.ps1" -Mode confirmed-clean -Execute
 ```
 
 ## Output style

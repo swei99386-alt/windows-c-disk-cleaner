@@ -5,6 +5,7 @@ param(
     [string]$ReportPath,
     [string[]]$ProjectWorkPath,
     [string]$PolicyPath,
+    [switch]$Execute,
     [switch]$EmitJson
 )
 
@@ -15,6 +16,11 @@ $auditScript = Join-Path $scriptRoot 'audit_windows_disk.ps1'
 $runnerScript = Join-Path $scriptRoot 'run_from_treesize.ps1'
 $closingScript = Join-Path $scriptRoot 'write_closing_report.ps1'
 $confirmedCleanScript = Join-Path $scriptRoot 'cleanup_confirmed_safe.ps1'
+$executionModes = @('safe-clean', 'confirmed-clean', 'project-work-clean')
+
+if ($Mode -in $executionModes -and -not $Execute) {
+    throw "Execution mode '$Mode' requires -Execute after explicit user confirmation. No cleanup was performed."
+}
 
 if ($Mode -eq 'audit-only') {
     $args = @('-ExecutionPolicy', 'Bypass', '-File', $auditScript, '-EmitJson')
@@ -30,9 +36,9 @@ if ($Mode -eq 'audit-only') {
     $args = @(
         '-ExecutionPolicy', 'Bypass',
         '-File', $confirmedCleanScript,
-        '-Execute',
         '-EmitJson'
     )
+    $args += @('-Execute', '-ConfirmCleanup')
     if ($Mode -eq 'confirmed-clean') {
         $args += @('-IncludeConfirmedCaches', '-IncludeBrowserCaches')
     }
@@ -53,8 +59,8 @@ if ($Mode -eq 'audit-only') {
     if ($PolicyPath) {
         $args += @('-PolicyPath', $PolicyPath)
     }
-    if ($Mode -eq 'safe-clean') {
-        $args += '-Execute'
+    if ($Mode -eq 'safe-clean' -and $Execute) {
+        $args += @('-Execute', '-ConfirmCleanup')
     }
     $args += '-EmitJson'
     $result = powershell @args | ConvertFrom-Json

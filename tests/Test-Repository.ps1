@@ -27,6 +27,12 @@ try {
     if ($expanded -ne (Join-Path $temp 'Documents')) { $failed += 'Environment expansion failed' }
     $plan = & (Join-Path $root 'install.ps1') -Target Codex -WhatIf 2>&1 | Out-String
     if (-not $plan -or (Test-Path (Join-Path $temp '.codex'))) { $failed += 'Installer WhatIf failed' }
+    $blocked = & pwsh -NoProfile -File (Join-Path $root 'scripts/run_disk_governor.ps1') -Mode safe-clean 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0 -or $blocked -notmatch 'requires -Execute') { $failed += 'Execution gate failed' }
+    $directBlocked = & pwsh -NoProfile -File (Join-Path $root 'scripts/cleanup_low_risk.ps1') -Execute 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0 -or $directBlocked -notmatch 'requires both -Execute and -ConfirmCleanup') { $failed += 'Direct cleanup gate failed' }
+    $treeBlocked = & pwsh -NoProfile -File (Join-Path $root 'scripts/run_from_treesize.ps1') -Execute 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0 -or $treeBlocked -notmatch 'requires both -Execute and -ConfirmCleanup') { $failed += 'Tree runner gate failed' }
 } finally { $env:USERPROFILE = $old; if (Test-Path $temp) { Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue } }
 if ($failed.Count) { $failed | ForEach-Object { Write-Error $_ }; exit 1 }
 Write-Output 'PASS: repository validation'
