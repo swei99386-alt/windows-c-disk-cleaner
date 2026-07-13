@@ -33,6 +33,14 @@ try {
     if ($LASTEXITCODE -eq 0 -or $directBlocked -notmatch 'requires both -Execute and -ConfirmCleanup') { $failed += 'Direct cleanup gate failed' }
     $treeBlocked = & pwsh -NoProfile -File (Join-Path $root 'scripts/run_from_treesize.ps1') -Execute 2>&1 | Out-String
     if ($LASTEXITCODE -eq 0 -or $treeBlocked -notmatch 'requires both -Execute and -ConfirmCleanup') { $failed += 'Tree runner gate failed' }
+    $confirmedBlocked = & pwsh -NoProfile -File (Join-Path $root 'scripts/cleanup_confirmed_safe.ps1') -Execute 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0 -or $confirmedBlocked -notmatch 'requires both -Execute and -ConfirmCleanup') { $failed += 'Confirmed cleanup gate failed' }
+    $duplicateBlocked = & pwsh -NoProfile -File (Join-Path $root 'scripts/find_duplicate_downloads.ps1') -Execute 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0 -or $duplicateBlocked -notmatch 'requires both -Execute and -ConfirmCleanup') { $failed += 'Duplicate cleanup gate failed' }
+    $confirmedScript = Get-Content (Join-Path $root 'scripts/cleanup_confirmed_safe.ps1') -Raw
+    $treeScript = Get-Content (Join-Path $root 'scripts/run_from_treesize.ps1') -Raw
+    if ($confirmedScript -notmatch 'browser-running-scan-skipped' -or $confirmedScript -notmatch "@\('deleted', 'cleared'\)") { $failed += 'Confirmed cleanup safety contract missing' }
+    if ($treeScript -notmatch 'system_drive_before_free_gb' -or $treeScript -notmatch 'system_drive_after_free_gb') { $failed += 'Safe-clean evidence fields missing' }
 } finally { $env:USERPROFILE = $old; if (Test-Path $temp) { Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue } }
 if ($failed.Count) { $failed | ForEach-Object { Write-Error $_ }; exit 1 }
 Write-Output 'PASS: repository validation'

@@ -20,6 +20,9 @@ if (-not $PolicyPath) {
 if ($Execute -and -not $ConfirmCleanup) {
     throw 'Cleanup requires both -Execute and -ConfirmCleanup after explicit user confirmation.'
 }
+if ($StopBrowserProcesses) {
+    throw 'Stopping browsers is not supported by this Skill. Close them manually or keep them open and let the scan skip them.'
+}
 
 function Convert-ToGB {
     param([Nullable[double]]$Bytes)
@@ -153,7 +156,7 @@ if ($IncludeConfirmedCaches) {
 }
 
 if ($IncludeBrowserCaches) {
-    $targets += [pscustomobject]@{ name = 'chrome-opt-guide-model'; path = (Join-Path $userProfile 'AppData\Local\Google\Chrome\User Data\OptGuideOnDeviceModel'); type = 'directory'; requires_browser_stop = $true; skip_size_when_running = ($browserRunning -and $Execute -and -not $StopBrowserProcesses); allow_under_never_touch = $false }
+    $targets += [pscustomobject]@{ name = 'chrome-opt-guide-model'; path = (Join-Path $userProfile 'AppData\Local\Google\Chrome\User Data\OptGuideOnDeviceModel'); type = 'directory'; requires_browser_stop = $true; skip_size_when_running = $browserRunning; allow_under_never_touch = $false }
 
     $cacheRoots = @($policy.cache_scan_roots)
     if (-not $cacheRoots -or $cacheRoots.Count -eq 0) {
@@ -175,10 +178,6 @@ if ($IncludeBrowserCaches) {
             $targets += [pscustomobject]@{ name = 'cache-scan'; path = $path; type = 'directory'; requires_browser_stop = $requiresBrowserStop; skip_size_when_running = $false; allow_under_never_touch = $false }
         }
     }
-}
-
-if ($browserRunning -and $IncludeBrowserCaches -and $Execute -and $StopBrowserProcesses) {
-    Get-Process chrome, msedge -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 }
 
 $results = foreach ($target in $targets | Sort-Object path -Unique) {

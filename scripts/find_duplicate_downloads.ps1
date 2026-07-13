@@ -4,6 +4,7 @@ param(
     [int]$MinLargeFileMB = 200,
     [int]$RecentDays = 30,
     [switch]$Execute,
+    [switch]$ConfirmCleanup,
     [switch]$EmitJson
 )
 
@@ -16,6 +17,9 @@ param(
 # recent file is usually something the user just downloaded on purpose.
 
 $ErrorActionPreference = 'Stop'
+if ($Execute -and -not $ConfirmCleanup) {
+    throw 'Duplicate-file deletion requires both -Execute and -ConfirmCleanup after explicit user confirmation.'
+}
 $userProfile = [Environment]::GetFolderPath('UserProfile')
 
 if (-not $ScanRoots -or $ScanRoots.Count -eq 0) {

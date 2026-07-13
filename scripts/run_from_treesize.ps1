@@ -45,9 +45,6 @@ $cleanupArgs = @(
 
 if ($Execute) {
     $cleanupArgs += @('-Execute', '-ConfirmCleanup')
-    if ($policy.allow_process_stop) {
-        $cleanupArgs += '-StopBrowserProcesses'
-    }
 }
 
 $cleanup = powershell @cleanupArgs | ConvertFrom-Json

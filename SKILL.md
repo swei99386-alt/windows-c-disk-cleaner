@@ -291,7 +291,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\window
 - Delete only redundant copies whose original still exists in the same folder:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\find_duplicate_downloads.ps1" -Execute
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\find_duplicate_downloads.ps1" -Execute -ConfirmCleanup
 ```
 
 - Audit only:
