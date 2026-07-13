@@ -1,105 +1,89 @@
-# Windows C Drive Cleaner (AI-Agent Skill)
-
 [简体中文](./README.md) | English
 
-> Clean your Windows C drive and entire hard disk intelligently through natural language conversations with AI—targeting developer caches, AI tool workspaces, browser data, and other hidden storage hogs missed by generic cleaners.
+# Windows C Disk Cleaner
 
-This is a **disk governance skill** designed for AI coding assistants (such as **Claude Code, Codex, and Antigravity**).
+An AI-assisted Windows disk auditing and conservative cleanup skill. It reports by default and only cleans strictly whitelisted low-risk caches after explicit user confirmation.
 
----
+## Safety warning
 
-## 🌟 Key Features
+Review the report before acting. The tool does not automatically delete personal documents, Downloads, Desktop files, WSL data, Docker virtual disks, or system directories. User-confirmed deletion may not be recoverable.
 
-* **AI-Native Governance**: No CLI commands to memorize. Just ask your AI: *"Audit my C drive and find storage hogs"*.
-* **Developer-Friendly**: Specifically detects npm, bun, Python uv caches, browser engines, AI recording folders, WSL virtual disks (`.vhdx`), and Docker images.
-* **Safety First**: Uses 5 risk-level categorizations (`auto_clear`, `confirm_then_clear`, `project_work_clean`, `suggest_only`, `never_touch`). It NEVER deletes blindly; a full report is generated first.
-* **Closing Snapshot**: Generates an audit report showing before/after disk spaces and details of what was deleted, skipped, or failed.
-* **TreeSize Integration**: Speeds up auditing by reading exported CSV reports from TreeSize.
+## Core capabilities
 
----
+- Detects available fixed disks and prioritizes the Windows system drive
+- Explains large files, developer caches, browser caches, and VHDX risks
+- Cleans low-risk caches only after confirmation
+- Reports duplicate installers and large files
+- Emits JSON reports reusable by Claude Code, Codex, and other agents
 
-## 🚀 Quick Start
+## Quick installation
 
-### 1. Clone the repository
-Clone this project into your local machine:
+Clone and inspect the code first:
+
 ```powershell
 git clone https://github.com/swei99386-alt/windows-c-disk-cleaner.git
 cd windows-c-disk-cleaner
-```
-
-### 2. Run the Auto-Installer (Recommended)
-Run the PowerShell setup script to automatically replace the config username placeholder with your actual Windows username and link this skill to your AI assistant(s):
-```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -WhatIf
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
-*Note: This script automatically detects and links to **Claude Code, Codex, and Antigravity** skills directories. If it fails due to Administrator/Developer mode restrictions, it will safely copy the files instead.*
 
-### 3. Start the Conversation
-Once installed, open your AI coding assistant (like Claude Code) and ask:
-```text
-Check what is taking space on C:
-```
-or:
-```text
-Find duplicate installer packages in my Downloads directory
-```
-The AI assistant will automatically execute the scripts behind the scenes and present you with a clear report.
-
----
-
-## 🛠 Manual Command Line Execution (Optional)
-
-If you prefer running scripts directly without an AI assistant:
+Online installation downloads and verifies a ZIP; it does not use opaque `irm | iex`:
 
 ```powershell
-# Scan only, no deletion (Safe Audit)
-powershell -ExecutionPolicy Bypass -File scripts\audit_windows_disk.ps1
-
-# Hunt duplicate downloads/installers
-powershell -ExecutionPolicy Bypass -File scripts\find_duplicate_downloads.ps1
-
-# Clean whitelisted low-risk caches (requires -Execute and confirmation)
-powershell -ExecutionPolicy Bypass -File scripts\cleanup_low_risk.ps1 -Execute
-
-# Write a closing report detailing space changes
-powershell -ExecutionPolicy Bypass -File scripts\write_closing_report.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/swei99386-alt/windows-c-disk-cleaner/main/install-online.ps1' -OutFile '$env:TEMP\windows-c-disk-cleaner-install.ps1'; & '$env:TEMP\windows-c-disk-cleaner-install.ps1'"
 ```
 
----
+The installer supports `-Target All|ClaudeCode|Codex|Antigravity`, `-InstallMode Auto|Junction|Copy`, `-Force`, and `-WhatIf`. Conflicts are preserved and reported; `-Force` backs them up before updating.
 
-## 🛡 Security Boundaries
+## Supported AI assistants
 
-1. **Default Report-Only**: No deletion occurs unless `-Execute` is explicitly specified.
-2. **System Folders Guarded**: `C:\Windows`, `Program Files`, and system configurations are strictly read-only.
-3. **Official Cleanups Only**: Windows updates (`SoftwareDistribution`, `$WINDOWS.~BT`) are left to official OS tools.
-4. **User Privacy**: Personal documents, WeChat files, and Desktop contents are only summarized, never deleted automatically.
+Claude Code, Codex, and Antigravity. The installer reports `installed`, `already_installed`, `conflict`, and `failed` per target.
 
----
+## Usage examples
 
-## 📂 Repository Structure
-
-```
-windows-c-disk-cleaner/
-├── SKILL.md                        # Skill definition for AI assistants
-├── config/
-│   └── auto-clean-policy.json      # Cleaning configuration policy
-├── scripts/
-│   ├── audit_windows_disk.ps1      # Main disk scanner
-│   ├── cleanup_low_risk.ps1        # Cache cleaner (npm, bun, etc.)
-│   ├── cleanup_confirmed_safe.ps1  # User-approved cleanup script
-│   ├── find_duplicate_downloads.ps1 # Duplicate/Large installer hunter
-│   ├── run_disk_governor.ps1       # Standard cross-agent wrapper (Recommended)
-│   ├── run_from_treesize.ps1       # TreeSize scanning mode wrapper
-│   ├── write_closing_report.ps1    # Before/After comparison report generator
-│   ├── start_treesize_scan.ps1     # Opens TreeSize to scan C:
-│   └── read_treesize_input.ps1     # Parses TreeSize output CSV
-├── references/
-│   ├── hotspots.md                 # Typical large directories breakdown
-│   └── claude-code.md              # Claude Code integration instructions
-└── agents/
-    └── openai.yaml                 # OpenAI/Codex agent compatibility config
+```text
+Audit why my C drive is nearly full; report only and do not delete anything.
+Scan all fixed disks and list directories larger than 1 GB.
+Clean only strictly whitelisted low-risk caches, but show the estimated reclaim first.
+Check Downloads for duplicate installers, but never delete personal documents automatically.
 ```
 
-## 📄 License
+## Example output
+
+See [docs/example-output.md](./docs/example-output.md). It is a format example and does not represent a fixed cleanup result.
+
+## Safety levels
+
+The public documentation uses five categories: safe to clean, clean after user confirmation, move or archive, handle through Windows or the app, and do not handle manually.
+
+## Manual commands
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_disk_governor.ps1 -Mode report-only -EmitJson
+powershell -ExecutionPolicy Bypass -File .\scripts\find_duplicate_downloads.ps1 -EmitJson
+powershell -ExecutionPolicy Bypass -File .\scripts\cleanup_low_risk.ps1 -Execute
+```
+
+## Verification status
+
+- CI verified: Windows GitHub Actions PowerShell 7 parsing, JSON, repository rules, and installer WhatIf.
+- Manually verified: repository tests and installer WhatIf were run in the current Windows environment.
+- Not yet verified: real installation in each Claude Code, Codex, and Antigravity client.
+
+This project is currently verified with PowerShell 7; Windows PowerShell 5.1 is not a supported target.
+
+## Current limitations
+
+No real cleanup was run, so no space reclaimed is claimed; real screenshots are pending manual addition. Docker and WSL are discovery/report-only and cannot be auto-deleted.
+
+## File structure
+
+`SKILL.md`, `config/auto-clean-policy.json`, `scripts/`, `references/`, `agents/openai.yaml`, `tests/`, and `.github/workflows/ci.yml`.
+
+## Contributing
+
+Read [CONTRIBUTING.md](./CONTRIBUTING.md). Do not expand dangerous automatic deletion or submit private paths.
+
+## License
 
 MIT

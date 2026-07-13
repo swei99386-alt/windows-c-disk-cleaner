@@ -1,0 +1,12 @@
+name: Windows PowerShell Validation
+on:
+  push:
+  pull_request:
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PowerShell 7 validation
+        shell: pwsh
+        run: pwsh -NoProfile -File .\tests\Test-Repository.ps1

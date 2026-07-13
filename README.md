@@ -1,120 +1,88 @@
 [English](./README_EN.md) | 简体中文
 
-# Windows C盘清理助手
+# Windows C Disk Cleaner
 
-> 通过和 AI 对话，帮你智能清理 Windows 电脑的 C 盘和整个硬盘——包括那些普通清理软件扫不到的 AI 工具缓存、开发者缓存、以及隐私敏感区域。
+AI 辅助 Windows 磁盘审计与安全清理 Skill。默认只扫描和报告，只有用户明确确认后才执行严格白名单里的低风险缓存清理。
 
-## 这是什么
+## 安全警告
 
-这是一套为 AI 编程助手（Claude Code、Codex、Antigravity 等）设计的**磁盘治理技能（Skill）**。
+请先看报告再决定。工具不会自动删除个人文档、下载、桌面文件、WSL、Docker 虚拟磁盘或系统目录；删除后不保证可以恢复。
 
-普通清理软件只会清垃圾桶和临时文件。这套工具的不同之处在于：
+## 核心能力
 
-- **它会和 AI 对话**——你不需要记任何命令，直接说"帮我看看 C 盘哪里大"，AI 就会扫描并用大白话给你解释
-- **它懂开发者环境**——能识别 npm 缓存、Python uv 缓存、浏览器内核、AI 工具数据、WSL 虚拟盘等现代工具的数据
-- **它先报告、再动手**——绝不自动删东西，每一步都告诉你"这是什么、删了有什么影响、能不能恢复"，你确认了才清
-- **它有安全分级**——把所有大文件分成五类：可直接清 / 确认后清 / 建议搬到别的盘 / 只能软件内处理 / 绝对不能碰
+- 自动识别本机固定磁盘，系统盘优先
+- 解释大文件、开发者缓存、浏览器缓存和 VHDX 的风险
+- 低风险缓存清理（仅在用户确认后）
+- 重复安装包和大文件报告
+- 输出可供 Claude Code、Codex 和其他 Agent 复用的 JSON 报告
 
-## 能帮你做什么
+## 快速安装
 
-| 功能 | 说明 |
-|---|---|
-| 全盘扫描 | 扫描 C/D/E 等多个分区，列出大文件排行 |
-| 自动清缓存 | 安全清理 npm、bun、浏览器缓存、AI 工具录屏等低风险缓存 |
-| 重复包猎手 | 找出下载目录里名字带 `(1)(2)` 的重复安装包 |
-| 大文件体检 | 解释每个大文件夹是什么、删了会怎样、能不能搬走 |
-| 收尾快照 | 清理完自动写一份前后对比报告，下次接着用 |
-| TreeSize 联动 | 支持读取 TreeSize 导出报告，加速扫描 |
+推荐先克隆、检查代码，再安装：
 
-## 适合谁用
-
-- 用 **Claude Code、Codex、Antigravity** 等 AI 助手的开发者
-- C 盘经常爆红但不知道哪里大的 Windows 用户
-- 不想折腾命令行、但想比普通清理软件清得更彻底的用户
-
-## 快速开始
-
-### 1. 克隆本仓库到本地
 ```powershell
 git clone https://github.com/swei99386-alt/windows-c-disk-cleaner.git
 cd windows-c-disk-cleaner
-```
-
-### 2. 运行一键安装配置脚本（推荐）
-在项目根目录下直接运行以下命令，脚本会自动获取您的当前用户名并进行替换，且会自动软链接（安装）到您的 AI 助手技能目录下：
-```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -WhatIf
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
-*注：该脚本会自动检测并安装到 **Claude Code、Codex 和 Antigravity**。如果因为权限限制无法创建软链接，脚本会自动为您复制文件。*
 
-*(您也可以选择手动配置：打开 `config/auto-clean-policy.json`，把所有 `YOURUSERNAME` 手动替换成您的 Windows 用户名，然后将整个文件夹复制到您的 AI 助手的技能目录下。)*
-
-### 3. 开始对话
-
-在 Claude Code 或 Codex 里直接说：
-
-```
-帮我扫一下 C 盘哪里占地方最多
-```
-
-或者：
-
-```
-找一下我下载目录里有没有重复的安装包
-```
-
-AI 会自动调用这套工具，给你一份清晰的中文报告。
-
-## 手动运行脚本
-
-不想通过 AI 对话，也可以直接跑 PowerShell 脚本：
+在线安装（脚本会下载并检查 ZIP，不使用不透明的 `irm | iex`）：
 
 ```powershell
-# 只扫描、不删（默认安全模式）
-powershell -ExecutionPolicy Bypass -File scripts\audit_windows_disk.ps1
-
-# 查找重复下载包
-powershell -ExecutionPolicy Bypass -File scripts\find_duplicate_downloads.ps1
-
-# 清理低风险缓存（需要确认）
-powershell -ExecutionPolicy Bypass -File scripts\cleanup_low_risk.ps1 -Execute
-
-# 写一份清理前后的收尾快照
-powershell -ExecutionPolicy Bypass -File scripts\write_closing_report.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/swei99386-alt/windows-c-disk-cleaner/main/install-online.ps1' -OutFile '$env:TEMP\windows-c-disk-cleaner-install.ps1'; & '$env:TEMP\windows-c-disk-cleaner-install.ps1'"
 ```
 
-## 安全原则
+支持 `-Target All|ClaudeCode|Codex|Antigravity`、`-InstallMode Auto|Junction|Copy`、`-Force` 和 `-WhatIf`。冲突目录默认保留并报告，`-Force` 也会先改名备份。
 
-这套工具遵循几条铁律：
+## 支持的 AI 助手
 
-1. **默认只看、不删** — 所有脚本不加 `-Execute` 参数就只报告，不动文件
-2. **五层风险分级** — 每个路径都有明确的处理分类，不会把"用户确认后才能删"的东西当成"直接清"
-3. **系统目录永不碰** — `C:\Windows`、`Program Files`、系统更新文件只会报告，不会手动删除
-4. **个人数据归用户决定** — 微信聊天记录、个人文档等只提示大小，不会自动处理
+Claude Code、Codex、Antigravity。安装器会逐项显示 `installed`、`already_installed`、`conflict`、`failed` 等结果。
+
+## 使用示例
+
+```text
+帮我检查一下 C 盘为什么快满了，只报告，不要删除。
+扫描本机所有固定磁盘，列出超过 1GB 的目录。
+只清理严格白名单里的低风险缓存，执行前先告诉我预计能释放多少。
+检查下载目录中的重复安装包，但不要自动删除个人文档。
+```
+
+## 示例输出
+
+见 [docs/example-output.md](./docs/example-output.md)。这是示例格式，不代表固定清理效果。
+
+## 安全分级
+
+对外使用五类：可安全清理、用户确认后清理、建议迁移或归档、应通过 Windows 或应用内部处理、禁止手动处理。
+
+## 手动运行命令
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_disk_governor.ps1 -Mode report-only -EmitJson
+powershell -ExecutionPolicy Bypass -File .\scripts\find_duplicate_downloads.ps1 -EmitJson
+powershell -ExecutionPolicy Bypass -File .\scripts\cleanup_low_risk.ps1 -Execute
+```
+
+## 已验证环境
+
+- CI verified：Windows GitHub Actions 的 PowerShell 7 Parser、JSON、仓库规则和安装器 WhatIf。
+- Manually verified：本仓库测试脚本和安装器 WhatIf 已在当前 Windows 环境执行。
+- Not yet verified：未在 Claude Code、Codex、Antigravity 真实客户端逐一安装验证。
+
+本项目当前按 PowerShell 7 验证；Windows PowerShell 5.1 不在支持承诺内。
+
+## 当前限制
+
+没有真实清理数据，因此不声称释放了任何空间；真实运行截图待人工补充。Docker 和 WSL 只发现和报告，不能自动删除。
 
 ## 文件结构
 
-```
-windows-c-disk-cleaner/
-├── SKILL.md                        # AI 助手技能说明（触发条件、工作流程）
-├── config/
-│   └── auto-clean-policy.json      # 清理策略配置（需填入你的用户名）
-├── scripts/
-│   ├── audit_windows_disk.ps1      # 主扫描脚本
-│   ├── cleanup_low_risk.ps1        # 低风险缓存清理
-│   ├── cleanup_confirmed_safe.ps1  # 用户确认后的清理
-│   ├── find_duplicate_downloads.ps1 # 重复包/大文件猎手
-│   ├── run_disk_governor.ps1       # 统一入口（推荐）
-│   ├── run_from_treesize.ps1       # TreeSize 联动模式
-│   ├── write_closing_report.ps1    # 收尾快照
-│   ├── start_treesize_scan.ps1     # 启动 TreeSize
-│   └── read_treesize_input.ps1     # 读取 TreeSize 报告
-├── references/
-│   ├── hotspots.md                 # 常见大文件热点说明
-│   └── claude-code.md              # Claude Code 复用指南
-└── agents/
-    └── openai.yaml                 # Codex/OpenAI 兼容配置
-```
+`SKILL.md`、`config/auto-clean-policy.json`、`scripts/`、`references/`、`agents/openai.yaml`、`tests/`、`.github/workflows/ci.yml`。
+
+## 贡献方式
+
+请先阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)，尤其不要扩大危险自动删除范围或提交私人路径。
 
 ## License
 
