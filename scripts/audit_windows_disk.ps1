@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
+. (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'lib\PolicyHelpers.ps1')
 
 function Convert-ToGB {
     param([Nullable[double]]$Bytes)
@@ -150,7 +151,7 @@ $skillRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path
 $policyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
 $policy = $null
 if (Test-Path -LiteralPath $policyPath) {
-    $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
+    $policy = Import-DiskPolicy -Path $policyPath
 }
 
 $treeSizeInput = $null

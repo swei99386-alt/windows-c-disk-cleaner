@@ -35,7 +35,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\window
 To include a verified project build/work directory:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\run_disk_governor.ps1" -Mode confirmed-clean -ProjectWorkPath "C:\Users\YOURUSERNAME\Documents\Projects\project-name\work" -EmitJson
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\skills\windows-c-disk-cleaner\scripts\run_disk_governor.ps1" -Mode confirmed-clean -ProjectWorkPath "$env:USERPROFILE\Documents\Projects\project-name\work" -EmitJson
 ```
 
 The wrapper rejects project work paths that do not end in `\work` or whose parent does not look like a project root (no `.git`, `package.json`, `pyproject.toml`, `android`, or `vite.config.ts`).

@@ -1,9 +1,9 @@
 ---
-name: windows-disk-governor
+name: windows-c-disk-cleaner
 description: "Use when the user wants Windows disk governance on this machine: audit C:/E:/F: usage, interpret TreeSize results, rank cleanup/move/keep candidates, maintain closing records, and optionally clear only low-risk caches such as npm, bun, browser cache, crash logs, component caches, or recording artifacts. Also use when the user wants a TreeSize-driven auto-cache-clean pass that only touches a strict low-risk whitelist and reports skipped items instead of forcing deletion."
 ---
 
-# Windows Disk Governor
+# Windows C Disk Cleaner
 
 Use this skill for Windows disk cleanup work on this machine. Treat it as governance, not blind deletion.
 
@@ -23,15 +23,15 @@ Trigger this skill when the user asks any of the following:
 
 ## Machine defaults
 
-- Audit `C:`, `E:`, and `F:` when the user asks for a full round or a closing record.
-- Audit `C:` first when the user only asks why the system drive is tight.
+- Automatically discover available fixed disks, with the Windows system drive first.
+- Audit the system drive first when the user only asks why it is tight.
 - Prefer moving large user or tool data to a secondary drive before deleting.
 - Focus on items larger than `1 GB` unless the user asks for smaller detail.
 - Default flow is: audit -> plan -> execute only if the user asks.
 - Low-risk execution is allowed only for explicit cache targets.
 - Auto-cache-clean mode is conservative by default: do not migrate user data, do not uninstall software, do not stop processes unless the user explicitly asks.
 - Cross-agent mode must rely only on local PowerShell scripts, JSON policy, and plain files so Codex and Claude Code can both reuse it.
-- Keep a closing record for long cleanup sessions under a user-specified output directory so future sessions can continue from facts instead of memory.
+- Keep a closing record under the user's Documents directory so future sessions can continue from facts instead of memory.
 - Treat "strict safe clean", "confirmed clean", and "project work cleanup" as different layers. Do not blur them in reports.
 
 ## Recurring governance goals

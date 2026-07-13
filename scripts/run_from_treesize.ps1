@@ -10,12 +10,13 @@ $ErrorActionPreference = 'Stop'
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $skillRoot = Split-Path -Parent $scriptRoot
+. (Join-Path $scriptRoot 'lib\PolicyHelpers.ps1')
 
 if (-not $PolicyPath) {
     $PolicyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
 }
 
-$policy = Get-Content -LiteralPath $PolicyPath -Raw | ConvertFrom-Json
+$policy = Import-DiskPolicy -Path $PolicyPath
 $readTreeScript = Join-Path $scriptRoot 'read_treesize_input.ps1'
 $auditScript = Join-Path $scriptRoot 'audit_windows_disk.ps1'
 $cleanupScript = Join-Path $scriptRoot 'cleanup_low_risk.ps1'

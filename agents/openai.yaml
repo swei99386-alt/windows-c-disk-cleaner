@@ -1,4 +1,4 @@
 interface:
-  display_name: "Windows Disk Governor"
-  short_description: "用中文扫描 C/E/F、解释大文件、清安全缓存，并输出 Codex/Claude Code 可复用报告"
-  default_prompt: "使用 $windows-disk-governor 扫描 C:、E:、F:，全部用简体中文解释大路径是什么、能不能删、删了有什么影响、能不能搬到别的盘。把项目分成：可以直接清、用户确认后清、项目 work 构建产物、建议搬/归档、只能软件内处理、观察两周、绝对不要碰，并写一份 Codex 和 Claude Code 都能复用的 JSON/中文收尾快照。除非用户明确同意，否则只清策略白名单里的低风险缓存。"
+  display_name: "Windows C Disk Cleaner"
+  short_description: "安全扫描 Windows 磁盘、解释大文件并在用户确认后清理低风险缓存"
+  default_prompt: "使用 $windows-c-disk-cleaner 自动识别本机固定磁盘，优先检查 Windows 系统盘。默认只扫描和报告；明确说明禁止自动清理用户数据、WSL、Docker 虚拟磁盘和系统目录。只有用户明确确认后，才处理严格白名单里的低风险缓存。"

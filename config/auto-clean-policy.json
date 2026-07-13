@@ -3,11 +3,9 @@
   "human_report_language": "zh-CN",
   "min_report_size_gb": 1.0,
   "full_audit_drives": [
-    "C:\\",
-    "E:\\",
-    "F:\\"
+    "AUTO_FIXED_DRIVES"
   ],
-  "closing_report_dir": "E:\\disk-audit-reports",
+  "closing_report_dir": "%USERPROFILE%\\Documents\\windows-c-disk-cleaner-reports",
   "c_drive_health_thresholds_gb": {
     "healthy": 50,
     "watch": 40,
@@ -26,36 +24,36 @@
     "component_crx_cache"
   ],
   "cache_scan_roots": [
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\Google\\Chrome\\User Data",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\Microsoft\\Edge\\User Data",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Code",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Antigravity"
+    "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+    "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data",
+    "%APPDATA%\\Code",
+    "%APPDATA%\\Antigravity"
   ],
   "auto_clear_paths": [
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\npm-cache",
-    "C:\\Users\\YOURUSERNAME\\.bun\\install\\cache",
-    "C:\\Users\\YOURUSERNAME\\.gemini\\antigravity\\browser_recordings",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Code\\CachedExtensionVSIXs",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Code\\CachedData",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Code\\WebStorage",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Antigravity\\CachedExtensionVSIXs",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Antigravity\\CachedData",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\Antigravity\\WebStorage",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\rod\\browser",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\yoo_web_cache"
+    "%LOCALAPPDATA%\\npm-cache",
+    "%USERPROFILE%\\.bun\\install\\cache",
+    "%USERPROFILE%\\.gemini\\antigravity\\browser_recordings",
+    "%APPDATA%\\Code\\CachedExtensionVSIXs",
+    "%APPDATA%\\Code\\CachedData",
+    "%APPDATA%\\Code\\WebStorage",
+    "%APPDATA%\\Antigravity\\CachedExtensionVSIXs",
+    "%APPDATA%\\Antigravity\\CachedData",
+    "%APPDATA%\\Antigravity\\WebStorage",
+    "%APPDATA%\\rod\\browser",
+    "%APPDATA%\\yoo_web_cache"
   ],
   "close_process_then_clear_paths": [
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\uv\\cache",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\Google\\Chrome\\User Data",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\Microsoft\\Edge\\User Data"
+    "%LOCALAPPDATA%\\uv\\cache",
+    "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+    "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data"
   ],
   "suggest_only_roots": [
-    "C:\\Users\\YOURUSERNAME\\xwechat_files",
-    "C:\\Users\\YOURUSERNAME\\Documents\\WeChat Files",
-    "C:\\Users\\YOURUSERNAME\\Desktop",
-    "C:\\Users\\YOURUSERNAME\\Downloads",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\npm",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\uv\\cache"
+    "%USERPROFILE%\\xwechat_files",
+    "%USERPROFILE%\\Documents\\WeChat Files",
+    "%USERPROFILE%\\Desktop",
+    "%USERPROFILE%\\Downloads",
+    "%APPDATA%\\npm",
+    "%LOCALAPPDATA%\\uv\\cache"
   ],
   "never_touch_roots": [
     "C:\\Windows",
@@ -68,24 +66,13 @@
     "C:\\$WINDOWS.~BT"
   ],
   "app_managed_paths": [
-    "C:\\Users\\YOURUSERNAME\\AppData\\Roaming\\npm",
+    "%APPDATA%\\npm",
     "C:\\Program Files\\Docker",
     "C:\\Program Files\\WSL",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\Google\\Chrome\\User Data",
-    "C:\\Users\\YOURUSERNAME\\AppData\\Local\\Microsoft\\Edge\\User Data"
+    "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+    "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data"
   ],
-  "watch_for_two_weeks": [
-    {
-      "name": "Docker Desktop data",
-      "path": "E:\\Docker_Data\\DockerDesktopWSL\\disk\\docker_data.vhdx",
-      "remove_rule": "Only recommend uninstall/removal after two consecutive weekly reports show no Docker service, process, WSL distro activity, or active project Docker usage."
-    },
-    {
-      "name": "WSL Ubuntu",
-      "path": "E:\\WSL\\Ubuntu\\ext4.vhdx",
-      "remove_rule": "Do not delete directly; export/unregister WSL if the Linux environment is retired."
-    }
-  ],
+  "watch_for_two_weeks": [],
   "protected_user_data_hints": [
     "WeChat and messaging app chat data",
     "AI assistant app state (Claude, Codex, etc.)",

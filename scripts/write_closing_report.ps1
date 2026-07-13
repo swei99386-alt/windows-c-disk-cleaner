@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string[]]$Drives = @('C', 'E', 'F'),
-    [string]$OutputDir = 'E:\disk-audit-reports',
+    [string[]]$Drives,
+    [string]$OutputDir,
     [decimal]$MinTopLevelGB = 0.5,
     [switch]$DeepRootScan,
     [switch]$NoWrite,
@@ -9,6 +9,10 @@ param(
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
+. (Join-Path $PSScriptRoot 'lib\PolicyHelpers.ps1')
+$policy = Import-DiskPolicy -Path (Join-Path (Split-Path -Parent $PSScriptRoot) 'config\auto-clean-policy.json')
+if (-not $Drives) { $Drives = Resolve-AuditDrives -ConfiguredDrives $policy.full_audit_drives }
+if (-not $OutputDir) { $OutputDir = Resolve-ClosingReportDirectory -ConfiguredPath $policy.closing_report_dir }
 
 function Convert-ToGB {
     param([Nullable[double]]$Bytes)
@@ -124,16 +128,7 @@ function Get-DockerObservation {
         $_.ProcessName -match 'docker|com\.docker'
     } | Select-Object ProcessName, Id, Path)
 
-    # Locate Docker data VHDX — common locations; adapt to your setup
-    $dockerVhdx = $null
-    $candidates = @(
-        'E:\Docker_Data\DockerDesktopWSL\disk\docker_data.vhdx',
-        "$env:USERPROFILE\AppData\Local\Docker\wsl\disk\docker_data.vhdx"
-    )
-    foreach ($c in $candidates) {
-        if (Test-Path -LiteralPath $c) { $dockerVhdx = $c; break }
-    }
-    if (-not $dockerVhdx) { $dockerVhdx = $candidates[0] }
+    $dockerVhdx = @(Get-ChildItem -LiteralPath "$env:LOCALAPPDATA\Docker" -Filter '*.vhdx' -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName)
 
     $vhdx = Get-PathFact `
         -Path $dockerVhdx `
@@ -159,16 +154,7 @@ function Get-WslObservation {
         $wslList = $null
     }
 
-    # Locate WSL VHDX — adapt path to your distro location
-    $wslVhdx = $null
-    $candidates = @(
-        'E:\WSL\Ubuntu\ext4.vhdx',
-        "$env:LOCALAPPDATA\wsl\Ubuntu\ext4.vhdx"
-    )
-    foreach ($c in $candidates) {
-        if (Test-Path -LiteralPath $c) { $wslVhdx = $c; break }
-    }
-    if (-not $wslVhdx) { $wslVhdx = $candidates[0] }
+    $wslVhdx = @(Get-ChildItem -LiteralPath "$env:LOCALAPPDATA\Packages" -Filter 'ext4.vhdx' -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName)
 
     $mainVhdx = Get-PathFact `
         -Path $wslVhdx `

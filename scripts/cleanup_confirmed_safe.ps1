@@ -11,6 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $userProfile = [Environment]::GetFolderPath('UserProfile')
 $skillRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+. (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'lib\PolicyHelpers.ps1')
 
 if (-not $PolicyPath) {
     $PolicyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
@@ -185,7 +186,9 @@ function Get-BrowserCacheTargets {
 }
 
 $script:results = @()
-$beforeDrives = @(@('C', 'E', 'F') | ForEach-Object { Get-DriveState -Letter $_ })
+$policy = Import-DiskPolicy -Path $PolicyPath
+$auditDrives = Resolve-AuditDrives -ConfiguredDrives $policy.full_audit_drives
+$beforeDrives = @($auditDrives | ForEach-Object { Get-DriveState -Letter $_ })
 
 foreach ($path in @($ProjectWorkPath)) {
     if ([string]::IsNullOrWhiteSpace($path)) { continue }
@@ -216,7 +219,7 @@ if ($IncludeBrowserCaches) {
     }
 }
 
-$afterDrives = @(@('C', 'E', 'F') | ForEach-Object { Get-DriveState -Letter $_ })
+$afterDrives = @($auditDrives | ForEach-Object { Get-DriveState -Letter $_ })
 $driveDelta = foreach ($before in $beforeDrives) {
     $after = $afterDrives | Where-Object { $_.drive -eq $before.drive } | Select-Object -First 1
     [pscustomobject]@{

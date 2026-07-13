@@ -11,6 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $userProfile = [Environment]::GetFolderPath('UserProfile')
 $skillRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+. (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'lib\PolicyHelpers.ps1')
 
 if (-not $PolicyPath) {
     $PolicyPath = Join-Path $skillRoot 'config\auto-clean-policy.json'
@@ -37,7 +38,7 @@ function Load-Policy {
         throw "Policy file not found: $Path"
     }
 
-    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    return Import-DiskPolicy -Path $Path
 }
 
 function Test-PathInRoots {
