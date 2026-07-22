@@ -1,6 +1,6 @@
 ---
 name: windows-c-disk-cleaner
-description: "Audit, explain, and clean Windows C/E disk space using a recovery-cost-first decision rule. Use for C: pressure, large files, repeated downloads/installers, old app backups, duplicate files, TreeSize reports, or requests to decide what can be deleted, moved, retained, or cleaned after confirmation."
+description: "Windows C/E disk cleanup and disk-space governance for requests such as C盘满了, C盘清理, Windows disk cleanup, C/E drive cleanup, large files, duplicate files, Downloads, installers, repair backups, or a deletion manifest. Audit, explain, and clean using a recovery-cost-first rule: recommend delete, keep, or move, then execute only after confirmation of exact paths."
 ---
 
 # Windows Disk Governor

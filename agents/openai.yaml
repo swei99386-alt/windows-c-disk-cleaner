@@ -1,4 +1,4 @@
 interface:
   display_name: "Windows C Disk Cleaner"
-  short_description: "按恢复成本判断 Windows 磁盘文件，给出明确的删、留、搬建议"
-  default_prompt: "使用 $windows-c-disk-cleaner 盘点本机固定磁盘，优先检查 C 盘。以“删除后的真实恢复成本是否低于持续占用空间的成本”为判断准则：普通公开安装包、未完成下载和已验证重复副本要给出明确删除建议；唯一资料、正在运行的环境和 WSL/Docker 等必须保留或走官方流程。先生成带精确路径和删后影响的清单，得到当前线程确认后再执行。"
+  short_description: "解决 C盘满了：按恢复成本给出明确的删除、保留或迁移建议"
+  default_prompt: "使用 $windows-c-disk-cleaner 处理“C盘满了”或“Windows disk cleanup”。盘点 C/E 盘，按恢复成本判断：公开安装包、未完成下载和 SHA-256 已验证重复副本明确建议删除；唯一资料、当前桌面、运行环境和 WSL/Docker 必须保护。先给精确删除清单（路径、容量、理由、删后影响），获得当前线程确认后执行，并报告 C/E 盘前后可用空间。"
