@@ -2,18 +2,19 @@
 
 # Windows C Disk Cleaner
 
-An AI-assisted Windows disk auditing and conservative cleanup skill. It reports by default and only cleans strictly whitelisted low-risk caches after explicit user confirmation.
+An AI-assisted Windows disk auditing and cleanup skill. It does not turn every uncertainty into a user decision: it recommends delete, keep, or move actions using a recovery-cost-first rule, while still requiring confirmation of the exact deletion manifest.
 
 ## Safety warning
 
-Review the report before acting. The tool does not automatically delete personal documents, Downloads, Desktop files, WSL data, Docker virtual disks, or system directories. Cleanup requires an explicit `-Execute` switch. Migration and directory links are always separate manual tasks, not automated Skill behavior.
+It recommends deletion for public installers that can be re-downloaded, incomplete downloads, and SHA-256-verified duplicate copies. It does not hand-delete unique personal data, live runtimes, WSL/Docker virtual disks, system directories, or installed applications. Every deletion requires an exact-path manifest and user confirmation; permanent deletion is not presented as recoverable.
 
 ## Core capabilities
 
 - Detects available fixed disks and prioritizes the Windows system drive
-- Explains large files, developer caches, browser caches, and VHDX risks
+- Uses recovery cost instead of blanket conservatism to judge large files, caches, and backups
 - Cleans low-risk caches only after confirmation
-- Reports duplicate installers and large files
+- Recommends deletion of public installers; keeps one SHA-256-verified duplicate copy
+- Verifies repair backups and migration copies against active desktop/project paths
 - Emits JSON reports reusable by Claude Code, Codex, and other agents
 
 ## Quick installation
@@ -45,7 +46,8 @@ Claude Code, Codex, and Antigravity. The installer reports `installed`, `already
 Audit why my C drive is nearly full; report only and do not delete anything.
 Scan all fixed disks and list directories larger than 1 GB.
 Clean only strictly whitelisted low-risk caches, but show the estimated reclaim first.
-Check Downloads for duplicate installers, but never delete personal documents automatically.
+Check Downloads: recommend deleting public installers, but only delete personal data after proving it is duplicated.
+Check whether this App.pre-repair folder is a disposable repair backup; recommend deletion when the active app is healthy.
 ```
 
 ## Example output
@@ -54,7 +56,7 @@ See [docs/example-output.md](./docs/example-output.md). It is a format example a
 
 ## Safety levels
 
-The public documentation uses five categories: safe to clean, clean after user confirmation, move or archive, handle through Windows or the app, and do not handle manually.
+The public documentation uses six categories: default-delete, dedupe-keep-one, verified-backup-delete, move-or-archive, official-or-app-only, and never-touch.
 
 ## Manual commands
 

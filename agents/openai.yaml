@@ -1,4 +1,4 @@
 interface:
   display_name: "Windows C Disk Cleaner"
-  short_description: "安全扫描 Windows 磁盘、解释大文件并在用户确认后清理低风险缓存"
-  default_prompt: "使用 $windows-c-disk-cleaner 自动识别本机固定磁盘，优先检查 Windows 系统盘。默认只扫描和报告；明确说明禁止自动清理用户数据、WSL、Docker 虚拟磁盘和系统目录。只有用户明确确认后，才处理严格白名单里的低风险缓存。"
+  short_description: "按恢复成本判断 Windows 磁盘文件，给出明确的删、留、搬建议"
+  default_prompt: "使用 $windows-c-disk-cleaner 盘点本机固定磁盘，优先检查 C 盘。以“删除后的真实恢复成本是否低于持续占用空间的成本”为判断准则：普通公开安装包、未完成下载和已验证重复副本要给出明确删除建议；唯一资料、正在运行的环境和 WSL/Docker 等必须保留或走官方流程。先生成带精确路径和删后影响的清单，得到当前线程确认后再执行。"
