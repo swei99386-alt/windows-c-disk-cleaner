@@ -2,24 +2,63 @@
 
 # Windows C Disk Cleaner
 
-An AI-assisted Windows disk auditing and cleanup skill. It does not turn every uncertainty into a user decision: it recommends delete, keep, or move actions using a recovery-cost-first rule, while still requiring confirmation of the exact deletion manifest.
+Is C: or E: full, but deleting files blindly feels dangerous? This skill makes an AI agent inspect the evidence first, then tell you clearly: **delete, keep, or move.**
 
-## Safety warning
+Its rule is simple:
 
-It recommends deletion for public installers that can be re-downloaded, incomplete downloads, and SHA-256-verified duplicate copies. It does not hand-delete unique personal data, live runtimes, WSL/Docker virtual disks, system directories, or installed applications. Every deletion requires an exact-path manifest and user confirmation; permanent deletion is not presented as recoverable.
+> If the real cost of getting a file back is low, it does not deserve to occupy scarce disk space forever.
 
-## Core capabilities
+Public installers, incomplete downloads, and proven duplicate files receive a clear delete recommendation. Unique data and live runtimes are protected.
 
-- Detects available fixed disks and prioritizes the Windows system drive
-- Uses recovery cost instead of blanket conservatism to judge large files, caches, and backups
-- Cleans low-risk caches only after confirmation
-- Recommends deletion of public installers; keeps one SHA-256-verified duplicate copy
-- Verifies repair backups and migration copies against active desktop/project paths
-- Emits JSON reports reusable by Claude Code, Codex, and other agents
+## What you get
 
-## Quick installation
+- An exact deletion manifest: path, size, why it is safe to recover, and deletion impact.
+- Public installers are treated as re-downloadable, not as fake “high-risk” files.
+- SHA-256 proves exact duplicates before all but one copy are removed.
+- Repair backups are deleted only after the live version is verified healthy; active runtimes are protected.
+- Before/after C: and E: free-space reporting.
 
-Clone and inspect the code first:
+## Who it is for
+
+**Ordinary Windows users:** paste one prompt into Claude Code, Codex, or another AI agent that can access your local files.
+
+**AI-tool users:** install this skill so an agent follows the same rules when asked about a full C: drive, duplicate installers, or a suspiciously large file.
+
+## Start in three steps
+
+1. Ask for an audit only.
+2. Review the exact deletion manifest.
+3. Confirm the exact paths and receive a before/after space report.
+
+Copy this prompt:
+
+```text
+Audit C: and E: using this rule: delete when recovery cost is lower than the cost of keeping the file. Do not delete anything yet. Produce an exact deletion manifest with path, size, reason, and deletion impact.
+```
+
+See the full [prompt library](./docs/copyable-prompts.md).
+
+## A real, anonymized case
+
+In one verified cleanup, the skill reclaimed **12.49 GB** by removing public installers and SHA-256-proven duplicate copies. It did not target WSL, Docker, Claude runtime data, unique files, or the active Windows Desktop. [Read the case and rule changes](./docs/real-cleanup-case.md).
+
+This is an example of the decision process, not a promised result for every machine.
+
+## Install for agents
+
+Install with Skills CLI for Codex and Claude Code:
+
+```powershell
+npx skills add swei99386-alt/windows-c-disk-cleaner -g -a codex -a claude-code
+```
+
+List the public repository skill first:
+
+```powershell
+npx skills add swei99386-alt/windows-c-disk-cleaner --list
+```
+
+Or clone, inspect, and install:
 
 ```powershell
 git clone https://github.com/swei99386-alt/windows-c-disk-cleaner.git
@@ -28,63 +67,32 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -WhatIf
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-Online installation downloads and verifies a ZIP; it does not use opaque `irm | iex`:
+## What it will not do
+
+- It does not make users decide about ordinary public installers merely because the agent is uncertain.
+- It does not hand-delete System32, Windows core files, WSL/Docker virtual disks, installed applications, or messaging-app data.
+- It does not assume a migrated folder named “Desktop” is the active Windows Desktop; it verifies the live known-folder path first.
+- It does not delete content from personal folders without an exact manifest and current-thread confirmation.
+
+## Agent decision rules
+
+| Situation | Default recommendation |
+|---|---|
+| Re-downloadable EXE/MSI/APK or incomplete download | Recommend delete |
+| SHA-256-identical files | Keep one, delete the rest |
+| Verified repair backup | Recommend delete when the live version is healthy |
+| Unique photos, videos, documents, or source code | Keep or move |
+| WSL, Docker, Claude/Codex runtime data | Keep or use the official app flow |
+
+## Validation and contribution
+
+The repository targets PowerShell 7. Run:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/swei99386-alt/windows-c-disk-cleaner/main/install-online.ps1' -OutFile '$env:TEMP\windows-c-disk-cleaner-install.ps1'; & '$env:TEMP\windows-c-disk-cleaner-install.ps1'"
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-Repository.ps1
 ```
 
-The installer supports `-Target All|ClaudeCode|Codex|Antigravity`, `-InstallMode Auto|Junction|Copy`, `-Force`, and `-WhatIf`. Conflicts are preserved and reported; `-Force` backs them up before updating.
-
-## Supported AI assistants
-
-Claude Code, Codex, and Antigravity. The installer reports `installed`, `already_installed`, `conflict`, and `failed` per target.
-
-## Usage examples
-
-```text
-Audit why my C drive is nearly full; report only and do not delete anything.
-Scan all fixed disks and list directories larger than 1 GB.
-Clean only strictly whitelisted low-risk caches, but show the estimated reclaim first.
-Check Downloads: recommend deleting public installers, but only delete personal data after proving it is duplicated.
-Check whether this App.pre-repair folder is a disposable repair backup; recommend deletion when the active app is healthy.
-```
-
-## Example output
-
-See [docs/example-output.md](./docs/example-output.md). It is a format example and does not represent a fixed cleanup result.
-
-## Safety levels
-
-The public documentation uses six categories: default-delete, dedupe-keep-one, verified-backup-delete, move-or-archive, official-or-app-only, and never-touch.
-
-## Manual commands
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run_disk_governor.ps1 -Mode report-only -EmitJson
-powershell -ExecutionPolicy Bypass -File .\scripts\find_duplicate_downloads.ps1 -EmitJson
-pwsh -NoProfile -File .\scripts\run_disk_governor.ps1 -Mode safe-clean -Execute
-```
-
-## Verification status
-
-- CI verified: Windows GitHub Actions PowerShell 7 parsing, JSON, repository rules, and installer WhatIf.
-- Manually verified: repository tests and installer WhatIf were run in the current Windows environment.
-- Not yet verified: real installation in each Claude Code, Codex, and Antigravity client.
-
-This project is currently verified with PowerShell 7; Windows PowerShell 5.1 is not a supported target.
-
-## Current limitations
-
-No real cleanup was run, so no space reclaimed is claimed; real screenshots are pending manual addition. Docker, WSL, and application migration are discovery/report-only and cannot be auto-deleted or auto-migrated. Browser profile trees are not scanned while the browser is running.
-
-## File structure
-
-`SKILL.md`, `config/auto-clean-policy.json`, `scripts/`, `references/`, `agents/openai.yaml`, `tests/`, and `.github/workflows/ci.yml`.
-
-## Contributing
-
-Read [CONTRIBUTING.md](./CONTRIBUTING.md). Do not expand dangerous automatic deletion or submit private paths.
+Read [CONTRIBUTING.md](./CONTRIBUTING.md). Do not expand dangerous automatic deletion or commit private paths or user data.
 
 ## License
 
